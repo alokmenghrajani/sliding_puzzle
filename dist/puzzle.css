@@ -89,6 +89,14 @@ html, body {margin: 0; height: 100%; overflow: hidden}
   overflow: hidden;
 }
 
+.done div {
+  border: 1vmin solid green !important;
+}
+
+.done {
+  border: 1px solid green !important;
+}
+
 #board div {
   width: 25%;
   height: 25%;

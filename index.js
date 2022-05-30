@@ -3,9 +3,8 @@
   - fix TODOs in code.
   - broken in safari.
   - test tablet + phone.
-  - bugs, bugs, bugs. Duplicate numbers showing up.
-  - write unittests.
-  - handle mouse exiting play area.
+  - handle mouse exiting play area/disallow moving more than N squares.
+
   - handle window resize!
   - save state locally
   - links for different levels
@@ -13,6 +12,7 @@
   - green border for correct cells?
   - keyboard bindings
   - smoother changes to element positions.
+  - make the board infinite (makes gameplay much nicer) instead of 12x12.
 */
 
 /**
@@ -26,195 +26,26 @@
  */
 
 const {Puzzle: Puzzle, Difficulty: Difficulty} = require('./puzzle.js');
+const HtmlUI = require('./html-ui.js');
 
-new Puzzle([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]], Difficulty.Hard);
+// for debugging purpose
+global.Puzzle = Puzzle;
+global.Difficulty = Difficulty;
+global.HtmlUI = HtmlUI;
 
-// const colorMap = {};
-// let dragHandler;
-// let divsMap = {};
-//
-// function init(target) {
-//   // Setup colormap. Letters map to arbitrary colors, numbers map to a gradient.
-//   colorMap["A"] = "#f44";
-//   colorMap["B"] = "#4f4";
-//   for (let i=0; i<4; i++) {
-//     for (let j=0; j<4; j++) {
-//       const n = 1 + i * 4 + j;
-//       const d = Math.sqrt((4-i)*(4-i) + (4-j)*(4-j)) / Math.sqrt(32);
-//       const color1 = 0x00 + (0xe0 - 0x00) * d;
-//       const color2 = 0x40 + (0xe0 - 0x40) * d;
-//       const color3 = 0x70 + (0xe0 - 0x70) * d;
-//       const color = 'rgba(' + color1 + "," + color2 + "," + color3 + ")";
-//       colorMap[n] = color;
-//     }
-//   }
-//
-//   // TODO: Shuffle board
-//
-//
-//   dragHandler = new DragHandler();
-//
-//   // fixes a delay issue (see https://stackoverflow.com/questions/61760755/how-to-fire-dragend-event-immediately)
-//   document.addEventListener("dragover", function( event ) {
-//       event.preventDefault();
-//   }, false);
-//
-//   for (let i=-4; i<8; i++) {
-//     for (let j=-4; j<8; j++) {
-//       createCell(i, j, target[mod(i, 4)][mod(j, 4)])
-//     }
-//   }
-//
-//   for (let i=0; i<4; i++) {
-//     for (let j=0; j<4; j++) {
-//       createGoalCell(i, j, target[i][j])
-//     }
-//   }
-// }
-//
+//const puzzle = new Puzzle([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]], Difficulty.Easy);
+const puzzle = new Puzzle([["A", "B", "A", "B"], ["B", "A", "B", "A"], ["A", "B", "A", "B"], ["B", "A", "B", "A"]], Difficulty.Hard);
+global.puzzle = puzzle;
+puzzle.shuffle();
+
+const htmlUI = new HtmlUI(puzzle, board, goal);
+global.htmlUI = htmlUI;
+
 // function offsetToPercentage(n) {
 //   return (n * 100 / 4) + "%";
 // }
 //
-// function offsetToStr(x, y) {
-//   return x * 100 + y;
-// }
-//
-// function offsetToX(n) {
-//   // TODO: why does board.getBoundingClientRect().width not equal offsetWidth
-//   // and clientWidth?
-//   const border = (board.offsetWidth - board.clientWidth);
-//   // TODO: check if it's board's border or div's border that we care about
-//   // here?
-//   const r = board.getBoundingClientRect();
-//   return n * (r.width-border)/4
-// }
-//
-// function offsetToY(n) {
-//   // TODO: why does board.getBoundingClientRect().width not equal offsetWidth
-//   // and clientWidth?
-//   const border = (board.offsetHeight - board.clientHeight);
-//   // TODO: check if it's board's border or div's border that we care about
-//   // here?
-//   const r = board.getBoundingClientRect();
-//   return n * (r.height-border)/4
-// }
-//
-// function createCell(x, y, label) {
-//   const div = document.createElement("div");
-//   div.innerText = label;
-//   div.style.left = offsetToPercentage(x);
-//   div.style.top = offsetToPercentage(y);
-//   div.ondragstart = (ev) => dragHandler.handleStart(ev);
-//   div.ondrag = (ev) => dragHandler.handle(ev);
-//   div.ondragend = (ev) => dragHandler.handleEnd(ev);
-//   div.draggable = true;
-//   div.style.backgroundColor = colorMap[label];
-//   div.id = "div" + offsetToStr(x, y);
-//   div["data-x"] = x;
-//   div["data-y"] = y;
-//   divsMap[offsetToStr(x, y)] = div;
-//   board.appendChild(div);
-// }
-//
-// function createGoalCell(x, y, label) {
-//   const div = document.createElement("div");
-//   div.innerText = label;
-//   div.style.left = offsetToPercentage(x);
-//   div.style.top = offsetToPercentage(y);
-//   div.style.backgroundColor = colorMap[label];
-//   goal.appendChild(div);
-// }
-//
-// function getPosX(el) {
-//   return el["data-x"]|0;
-// }
-//
-// function getPosY(el) {
-//   return el["data-y"]|0;
-// }
-//
-// class DragHandler {
-//   constructor() {
-//     this.dragging = null;
-//
-//     this.blankImg = new Image();
-//     this.blankImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
-//   }
-//
-//   handleStart(ev) {
-//     if (this.dragging != null) {
-//       console.log("OOPS");
-//       debugger;
-//       return false;
-//     }
-//     console.log("starting: " + ev.srcElement.id);
-//     this.dragging = ev.srcElement;
-//
-//     // record element's starting position
-//     const r = board.getBoundingClientRect();
-//     this.eventStartX = ev.x - r.x;
-//     this.eventStartY = ev.y - r.y;
-//
-//     // remove ghost image
-//     ev.dataTransfer.setDragImage(this.blankImg, 0, 0);
-//
-//     // fix cursor while dragging
-//     ev.dataTransfer.effectAllowed = "move";
-//   }
-//
-//   handle(ev) {
-//     if (this.dragging == null) {
-//       return false;
-//     }
-//     if (ev.srcElement != this.dragging) {
-//       console.log("OOPS");
-//       debugger;
-//       return false;
-//     }
-//
-//     // calculate how much the mouse has moved from it's initial position
-//     // assumption: all 4 borders have the same width.
-//     const r = board.getBoundingClientRect();
-//     const border = (board.offsetWidth - board.clientWidth) / 2;
-//     // TODO: check if it's board's border or div's border that we care about
-//     // here? Remember, div's border depends on window size.
-//
-//     const x = ev.x - r.x - border;
-//     const y = ev.y - r.y - border;
-//     const deltaX = x - this.eventStartX;
-//     const deltaY = y - this.eventStartY;
-//
-//     // figure out which axis we are moving on
-//     if (Math.abs(deltaX) > Math.abs(deltaY)) {
-//       // Grab all the nodes on the same row
-//       let nodes = this.findHorzNodes(getPosY(this.dragging));
-//       nodes.map(el => {
-//         el.style.left = offsetToX(getPosX(el)) + deltaX;
-//       });
-//
-//       // Reset the nodes on the same column
-//       // TODO: figure out to make this less jarring
-//       nodes = this.findVertNodes(getPosX(this.dragging));
-//       nodes.map(el => {
-//         el.style.top = offsetToY(getPosY(el));
-//       });
-//     } else {
-//       // Grab all the nodes on the same column
-//       let nodes = this.findVertNodes(getPosX(this.dragging));
-//       nodes.map(el => {
-//         el.style.top = offsetToY(getPosY(el)) + deltaY;
-//       });
-//
-//       // Reset the nodes on the same row
-//       // TODO: figure out to make this less jarring
-//       nodes = this.findHorzNodes(getPosY(this.dragging));
-//       nodes.map(el => {
-//         el.style.left = offsetToX(getPosX(el));
-//       });
-//     }
-//   }
-//
+
 //   handleEnd(ev) {
 //     // TODO: refactor with above
 //     if (this.dragging == null) {
@@ -316,31 +147,7 @@ new Puzzle([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]], Diff
 //     }
 //     this.dragging = null;
 //   }
-//
-//   findHorzNodes(offset) {
-//     const r = [];
-//     for (let i=-4; i<8; i++) {
-//       r.push(divsMap[offsetToStr(i, offset)])
-//     }
-//     if (r.length != 12) {
-//       console.log("WHAT?")
-//       debugger;
-//     }
-//     return r;
-//   }
-//
-//   findVertNodes(offset) {
-//     const r = [];
-//     for (let j=-4; j<8; j++) {
-//       r.push(divsMap[offsetToStr(offset, j)])
-//     }
-//     if (r.length != 12) {
-//       console.log("WHAT 2?")
-//       debugger;
-//     }
-//     return r;
-//   }
-//
+
 //   abort(ev) {
 //     if (this.dragging == null) {
 //       return false;

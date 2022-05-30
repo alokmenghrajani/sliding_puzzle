@@ -1,5 +1,9 @@
 const positiveMod = require('./utils.js');
 
+/**
+ * Core of the puzzle. This class tracks the current state of the grid, handles
+ * shuffling, checking whether we are done, etc.
+ */
 class Puzzle {
   constructor(target, difficulty) {
     this.target = target;
@@ -26,6 +30,17 @@ class Puzzle {
         this.moveVert(pos, dir);
       }
     }
+  }
+
+  done() {
+    for (let i=0; i<4; i++) {
+      for (let j=0; j<4; j++) {
+        if (this.state[i][j] != this.target[i][j]) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   /**
@@ -58,7 +73,7 @@ class Puzzle {
 
   moveVert(x, dir) {
     const cols = this.rowColPair(x);
-    cols.forEach(col => this.moveSingleRowHorz(col, dir));
+    cols.forEach(col => this.moveSingleColVert(col, dir));
   }
 
   moveSingleColVert(x, dir) {
@@ -69,18 +84,6 @@ class Puzzle {
     for (let i=0; i<4; i++) {
       this.state[i][x] = t[i];
     }
-  }
-
-  toString() {
-    let r = "";
-    for (let i=0; i<4; i++) {
-      for (let j=0; j<4; j++) {
-        const t = this.state[i][j] + "";
-        r += t.padStart(3, " ");
-      }
-      r += "\n";
-    }
-    return r;
   }
 }
 
