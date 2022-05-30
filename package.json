@@ -6,5 +6,8 @@
   "repository": "https://github.com/alokmenghrajani/sliding_puzzle",
   "author": "Alok Menghrajani",
   "license": "Apache-2.0",
-  "private": false
+  "private": false,
+  "devDependencies": {
+    "jest": "^28.1.0"
+  }
 }
