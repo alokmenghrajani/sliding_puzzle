@@ -1,0 +1,10 @@
+{
+  "name": "sliding_puzzle",
+  "version": "0.0.1",
+  "description": "A sliding puzzle with a Rubik's cube-like feel.",
+  "main": "index.js",
+  "repository": "https://github.com/alokmenghrajani/sliding_puzzle",
+  "author": "Alok Menghrajani",
+  "license": "Apache-2.0",
+  "private": false
+}
