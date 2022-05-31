@@ -12,12 +12,12 @@ class Puzzle {
     this.difficulty = difficulty;
   }
 
-  shuffle() {
-    // 100 random moves should be enough to randomize the board. The advantage
-    // of using random moves is that it guarantees that the resulting board is
-    // solvable. The downside is that all board positions won't be equally
-    // likely to show up.
-    for (let i = 0; i < 100; i++) {
+  shuffle(n) {
+    // if n>100, random moves should be enough to get an interesting start
+    // position. The advantage of using random moves is that it guarantees that
+    // the resulting board is solvable. The downside is that not all board
+    // positions will be equally likely to show up.
+    for (let i = 0; i < n; i++) {
       // pick a number between 0-3
       const pos = (Math.random() * 4) | 0;
 
@@ -32,7 +32,7 @@ class Puzzle {
     }
   }
 
-  done() {
+  solved() {
     for (let i=0; i<4; i++) {
       for (let j=0; j<4; j++) {
         if (this.state[i][j] != this.target[i][j]) {

@@ -1,4 +1,5 @@
 const positiveMod = require('./utils.js');
+const confetti = require('./confetti.js');
 
 /**
  * Code to create html nodes and handle interaction via mouse/touch gestures.
@@ -28,6 +29,12 @@ class HtmlUI {
 
     this.createGrid();
     this.createGoal();
+
+    document.onmousemove = (ev) => this.handleMove(ev);
+    document.onmouseup = (ev) => this.handleEnd(ev);
+    document.ontouchmove = (ev) => this.handleMove(ev);
+    document.ontouchend = (ev) => this.handleEnd(ev);
+    document.onkeydown = (ev) => this.handleKey(ev);
   }
 
   createGrid() {
@@ -42,10 +49,12 @@ class HtmlUI {
       }
     }
     this.board.replaceChildren(...r);
-    document.onmousemove = (ev) => this.handleMove(ev);
-    document.onmouseup = (ev) => this.handleEnd(ev);
-    document.ontouchmove = (ev) => this.handleMove(ev);
-    document.ontouchend = (ev) => this.handleEnd(ev);
+
+    const solved = this.puzzle.solved();
+    this.board.className = solved ? "solved" : "unsolved";
+    if (solved) {
+      confetti.start(10000);
+    }
   }
 
   createCell(x, y, label) {
@@ -62,6 +71,7 @@ class HtmlUI {
 
     this.offsets[div.id] = [x, y];
     this.divs[this.offsetToStr(x, y)] = div;
+
     return div;
   }
 
@@ -99,7 +109,7 @@ class HtmlUI {
       return false;
     }
 
-    if (this.puzzle.done()) {
+    if (this.puzzle.solved()) {
       // Disallow making moves once the puzzle is solved.
       return false;
     }
@@ -112,8 +122,6 @@ class HtmlUI {
     const y = ev.clientY || ev.targetTouches[0].pageY;
 
     this.dragStart = [x - r.x, y - r.y];
-
-    console.log("handleStart called");
   }
 
   handleMove(ev) {
@@ -180,7 +188,8 @@ class HtmlUI {
 
   handleEnd(ev) {
     if (this.dragging == null) {
-      console.log("handleEnd while not dragging");
+      // This can happen if the initial mouse down happens outside the play
+      // area. Simplest to ignore.
       return false;
     }
 
@@ -229,7 +238,6 @@ class HtmlUI {
       // here?
       const r = this.board.getBoundingClientRect();
       deltaX = Math.round(deltaX * 4 / (r.width-border));
-      console.log("MOVE HORZ", this.offsets[this.dragging.id][1], deltaX);
       this.puzzle.moveHorz(this.offsets[this.dragging.id][1], deltaX);
     } else {
       // round deltaY
@@ -239,20 +247,37 @@ class HtmlUI {
       // here?
       const r = this.board.getBoundingClientRect();
       deltaY = Math.round(deltaY * 4 / (r.height-border));
-      console.log("MOVE VERT", this.offsets[this.dragging.id][0], deltaY);
       this.puzzle.moveVert(this.offsets[this.dragging.id][0], deltaY);
     }
 
     this.createGrid();
     this.dragging = null;
+  }
 
-    // check if we are done
-    if (this.puzzle.done()) {
-      global.confetti.start(10000);
-      this.board.classList.add("done");
+  handleKey(ev) {
+    switch (ev.keyCode) {
+      case 49: // "1"
+      case 50: // "2"
+      case 51: // "3"
+      case 52: // "4"
+        this.puzzle.moveVert(ev.keyCode - 49, ev.shiftKey ? -1 : 1);
+        break;
+      case 53: // "5"
+        this.puzzle.moveHorz(0, ev.shiftKey ? -1 : 1);
+        break;
+      case 84: // "T"
+      this.puzzle.moveHorz(1, ev.shiftKey ? -1 : 1);
+      break;
+      case 71: // "G"
+      this.puzzle.moveHorz(2, ev.shiftKey ? -1 : 1);
+      break;
+      case 66: // "B"
+      this.puzzle.moveHorz(3, ev.shiftKey ? -1 : 1);
+      break;
+      default:
+        return;
     }
-
-    console.log("handleEnd called");
+    this.createGrid();
   }
 
   resetNodes() {
@@ -303,41 +328,3 @@ class HtmlUI {
 }
 
 module.exports = HtmlUI
-
-
-//   handleEnd(ev) {
-//
-//       // TODO: handle wrap around!
-//     }
-//     this.dragging = null;
-//   }
-//
-//
-//
-//   abort(ev) {
-//     if (this.dragging == null) {
-//       return false;
-//     }
-//     if (ev.srcElement != this.dragging) {
-//       console.log("OOPS");
-//       debugger;
-//       return false;
-//     }
-//
-//     // Reset the nodes on the same column
-//     // TODO: figure out to make this less jarring
-//     let nodes = this.findVertNodes(getPosX(this.dragging));
-//     nodes.map(el => {
-//       el.style.top = offsetToY(getPosY(el));
-//     });
-//
-//     // Reset the nodes on the same row
-//     // TODO: figure out to make this less jarring
-//     nodes = this.findHorzNodes(getPosY(this.dragging));
-//     nodes.map(el => {
-//       el.style.left = offsetToX(getPosX(el));
-//     });
-//
-//     this.dragging = null;
-//   }
-// }

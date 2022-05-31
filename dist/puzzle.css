@@ -18,6 +18,11 @@
     grid-row: 2 / span 2;
   }
 
+  #rules {
+    grid-column: 4 / 4;
+    grid-row: 2 / 2;
+  }
+
   #goal {
     grid-column: 4 / 4;
     grid-row: 3 / 3;
@@ -84,24 +89,30 @@ body {
 html, body {margin: 0; height: 100%; overflow: hidden}
 
 #board {
-  border: 1px solid black;
   position: relative;
   overflow: hidden;
 }
 
-.done div {
-  border: 1vmin solid green !important;
+.unsolved {
+  border: 1px solid black;
 }
 
-.done {
-  border: 1px solid green !important;
+.solved {
+  border: 1px solid black;
+}
+
+.unsolved div {
+  border: 1vmin solid black; /* todo: make this conditional on window shape */
+}
+
+.solved div {
+  border: 0.5vmin solid #474;
 }
 
 #board div {
   width: 25%;
   height: 25%;
   box-sizing: border-box;
-  border: 1vmin solid black; /* todo: make this conditional on window shape */
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -130,4 +141,9 @@ html, body {margin: 0; height: 100%; overflow: hidden}
   position: absolute;
   font-size: 2vmin; /* todo: make this conditional on window shape */
   user-select: none;
+}
+
+ul {
+  padding-top: 0;
+  margin-top: 0;
 }
