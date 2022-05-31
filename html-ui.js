@@ -30,10 +30,8 @@ class HtmlUI {
     this.createGrid();
     this.createGoal();
 
-    document.onmousemove = (ev) => this.handleMove(ev);
-    document.onmouseup = (ev) => this.handleEnd(ev);
-    document.ontouchmove = (ev) => this.handleMove(ev);
-    document.ontouchend = (ev) => this.handleEnd(ev);
+    document.onpointermove = (ev) => this.handleMove(ev);
+    document.onpointerup = (ev) => this.handleEnd(ev);
     document.onkeydown = (ev) => this.handleKey(ev);
   }
 
@@ -66,8 +64,7 @@ class HtmlUI {
     div.id = "cell_" + this.offsetToStr(x, y);
 
     // UI events
-    div.onmousedown = (ev) => this.handleStart(ev);
-    div.ontouchstart = (ev) => this.handleStart(ev);
+    div.onpointerdown = (ev) => this.handleStart(ev);
 
     this.offsets[div.id] = [x, y];
     this.divs[this.offsetToStr(x, y)] = div;
@@ -114,14 +111,11 @@ class HtmlUI {
       return false;
     }
 
-    this.dragging = ev.srcElement;
-
     // record element's starting position
     const r = board.getBoundingClientRect();
-    const x = ev.clientX || ev.targetTouches[0].pageX;
-    const y = ev.clientY || ev.targetTouches[0].pageY;
 
-    this.dragStart = [x - r.x, y - r.y];
+    this.dragStart = [ev.clientX - r.x, ev.clientY - r.y];
+    this.dragging = ev.srcElement;
   }
 
   handleMove(ev) {
@@ -130,12 +124,10 @@ class HtmlUI {
     }
 
     // calculate how much the mouse has moved from it's initial position
-    const eventX = ev.clientX || ev.targetTouches[0].pageX;
-    const eventY = ev.clientY || ev.targetTouches[0].pageY;
     const r = this.board.getBoundingClientRect();
 
-    const x = eventX - r.x;
-    const y = eventY - r.y;
+    const x = ev.clientX - r.x;
+    const y = ev.clientY - r.y;
     let deltaX = x - this.dragStart[0];
     let deltaY = y - this.dragStart[1];
 
@@ -192,28 +184,21 @@ class HtmlUI {
 
     // calculate how much the mouse has moved from it's initial position
     // assumption: all 4 borders have the same width.
-    const eventX = ev.clientX || ev.targetTouches[0].pageX;
-    const eventY = ev.clientY || ev.targetTouches[0].pageY;
     const r = this.board.getBoundingClientRect();
-    const border = (this.board.offsetWidth - this.board.clientWidth) / 2;
-    // TODO: check if it's board's border or div's border that we care about
-    // here? Remember, div's border depends on window size.
-    // TODO: we are assuming the border is the same on all 4 sides.
-
-    const x = eventX - r.x - border;
-    const y = eventY - r.y - border;
+    const x = ev.clientX - r.x;
+    const y = ev.clientY - r.y;
     let deltaX = x - this.dragStart[0];
     let deltaY = y - this.dragStart[1];
 
     // Prevent dragging too far in any direction
-    const maxX = this.offsetToX(3.2);
+    const maxX = this.offsetToX(3.5);
     if (deltaX > maxX) {
       deltaX = maxX;
     }
     if (deltaX < -maxX) {
       deltaX = -maxX;
     }
-    const maxY = this.offsetToY(3.2);
+    const maxY = this.offsetToY(3.5);
     if (deltaY > maxY) {
       deltaY = maxY;
     }
