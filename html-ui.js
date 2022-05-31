@@ -130,29 +130,24 @@ class HtmlUI {
     }
 
     // calculate how much the mouse has moved from it's initial position
-    // assumption: all 4 borders have the same width.
     const eventX = ev.clientX || ev.targetTouches[0].pageX;
     const eventY = ev.clientY || ev.targetTouches[0].pageY;
     const r = this.board.getBoundingClientRect();
-    const border = (this.board.offsetWidth - this.board.clientWidth) / 2;
-    // TODO: check if it's board's border or div's border that we care about
-    // here? Remember, div's border depends on window size.
-    // TODO: we are assuming the border is the same on all 4 sides.
 
-    const x = eventX - r.x - border;
-    const y = eventY - r.y - border;
+    const x = eventX - r.x;
+    const y = eventY - r.y;
     let deltaX = x - this.dragStart[0];
     let deltaY = y - this.dragStart[1];
 
     // Prevent dragging too far in any direction
-    const maxX = this.offsetToX(3.2);
+    const maxX = this.offsetToX(3.5);
     if (deltaX > maxX) {
       deltaX = maxX;
     }
     if (deltaX < -maxX) {
       deltaX = -maxX;
     }
-    const maxY = this.offsetToY(3.2);
+    const maxY = this.offsetToY(3.5);
     if (deltaY > maxY) {
       deltaY = maxY;
     }
@@ -307,21 +302,13 @@ class HtmlUI {
   }
 
   offsetToX(n) {
-    // TODO: why does board.getBoundingClientRect().width not equal offsetWidth
-    // or clientWidth?
     const border = (this.board.offsetWidth - this.board.clientWidth);
-    // TODO: check if it's board's border or div's border that we care about
-    // here?
     const r = this.board.getBoundingClientRect();
     return n * (r.width-border)/4
   }
 
   offsetToY(n) {
-    // TODO: why does board.getBoundingClientRect().width not equal offsetWidth
-    // and clientWidth?
     const border = (this.board.offsetHeight - this.board.clientHeight);
-    // TODO: check if it's board's border or div's border that we care about
-    // here?
     const r = this.board.getBoundingClientRect();
     return n * (r.height-border)/4
   }
