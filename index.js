@@ -35,12 +35,11 @@ function positionBoards() {
     goal.style.left = 2*s/3;
     goal.style.top = s + 10;
   }
-  alok = board;
-
 }
 
 window.onload = () => positionBoards();
 window.onresize = () => positionBoards();
+positionBoards();
 
 function loadLevel(level) {
   let puzzle;
