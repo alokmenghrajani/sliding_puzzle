@@ -83,7 +83,7 @@ class HtmlUI {
   createGoal() {
     for (let i=0; i<4; i++) {
       for (let j=0; j<4; j++) {
-        this.createGoalCell(i, j, this.puzzle.target[i][j])
+        this.createGoalCell(i, j, this.puzzle.target[j][i])
       }
     }
   }
