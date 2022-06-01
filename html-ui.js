@@ -12,6 +12,8 @@ class HtmlUI {
     this.board = board;
     this.goal = goal;
     this.dragging = null;
+    // use pointerId to disable multitouch events.
+    this.pointerId = null;
     this.dragStart = [0, 0];
 
     // Setup colormap. Letters map to arbitrary colors, numbers map to a
@@ -115,12 +117,17 @@ class HtmlUI {
     const r = board.getBoundingClientRect();
 
     this.dragStart = [ev.clientX - r.x, ev.clientY - r.y];
+    this.pointerId = ev.pointerId;
     this.dragging = ev.srcElement;
     ev.preventDefault();
+    return false;
   }
 
   handleMove(ev) {
     if (this.dragging == null) {
+      return false;
+    }
+    if (ev.pointerId != this.pointerId) {
       return false;
     }
 
@@ -173,6 +180,7 @@ class HtmlUI {
       });
     }
     ev.preventDefault();
+    return false;
   }
 
   handleEnd(ev) {
@@ -228,6 +236,7 @@ class HtmlUI {
     this.createGrid();
     this.dragging = null;
     ev.preventDefault();
+    return false;
   }
 
   handleKey(ev) {
