@@ -116,6 +116,7 @@ class HtmlUI {
 
     this.dragStart = [ev.clientX - r.x, ev.clientY - r.y];
     this.dragging = ev.srcElement;
+    ev.preventDefault();
   }
 
   handleMove(ev) {
@@ -171,6 +172,7 @@ class HtmlUI {
         el.style.top = this.offsetToY(this.offsets[el.id][1]) + deltaY;
       });
     }
+    ev.preventDefault();
   }
 
   handleEnd(ev) {
@@ -225,6 +227,7 @@ class HtmlUI {
 
     this.createGrid();
     this.dragging = null;
+    ev.preventDefault();
   }
 
   handleKey(ev) {
@@ -251,6 +254,7 @@ class HtmlUI {
         return;
     }
     this.createGrid();
+    ev.preventDefault();
   }
 
   resetNodes() {
