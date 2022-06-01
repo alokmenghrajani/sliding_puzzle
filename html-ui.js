@@ -1,5 +1,7 @@
 const positiveMod = require('./utils.js');
-const confetti = require('./confetti.js');
+const Confetti = require('./confetti.js');
+
+global.conf = Confetti;
 
 /**
  * Code to create html nodes and handle interaction via mouse/touch gestures.
@@ -51,7 +53,7 @@ class HtmlUI {
     const solved = this.puzzle.solved();
     this.board.className = solved ? "solved" : "unsolved";
     if (solved) {
-      confetti.start(10000);
+      new Confetti().start(10000);
     }
   }
 
