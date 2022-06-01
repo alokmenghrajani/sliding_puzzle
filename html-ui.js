@@ -102,9 +102,7 @@ class HtmlUI {
   handleStart(ev) {
     if (this.dragging != null) {
       // We got a handleStart while already dragging. This can happen in various
-      // edge cases. The easiest is to ignore the event (TODO: figure out if
-      // it's better to call abort() and then handle the new event?)
-      console.log("handleStart while dragging");
+      // edge cases. The easiest is to ignore the event
       return false;
     }
 
@@ -215,20 +213,13 @@ class HtmlUI {
     // figure out which axis we are dragging on
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
       // round deltaX
-      const border = (this.board.offsetWidth - this.board.clientWidth);
-      // TODO: check if it's board's border or div's border that we care about
-      // here?
       const r = this.board.getBoundingClientRect();
-      deltaX = Math.round(deltaX * 4 / (r.width-border));
+      deltaX = Math.round(deltaX * 4 / r.width);
       this.puzzle.moveHorz(this.offsets[this.dragging.id][1], deltaX);
     } else {
       // round deltaY
-      const border = (this.board.offsetHeight - this.board.clientHeight);
-
-      // TODO: check if it's board's border or div's border that we care about
-      // here?
       const r = this.board.getBoundingClientRect();
-      deltaY = Math.round(deltaY * 4 / (r.height-border));
+      deltaY = Math.round(deltaY * 4 / r.height);
       this.puzzle.moveVert(this.offsets[this.dragging.id][0], deltaY);
     }
 
