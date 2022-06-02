@@ -18,7 +18,7 @@ class HtmlUI {
 
     // Setup colormap. Letters map to arbitrary colors, numbers map to a
     // gradient.
-    this.colorMap = {"A": "#f44", "B": "#4f4"};
+    this.colorMap = {"A": "#b7e5dd", "B": "#9a86a4"};
     for (let i=0; i<4; i++) {
       for (let j=0; j<4; j++) {
         const n = 1 + i * 4 + j;
