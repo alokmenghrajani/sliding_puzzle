@@ -1,7 +1,2 @@
-module.exports = {
-  entry: {
-    main: './index.js',
-  },
-  mode: 'development',
-  watch: true,
-};
+module.exports = (env) => { return require(`./webpack.${env.env}.js`) }
+
