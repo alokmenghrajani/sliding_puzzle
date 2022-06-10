@@ -1,4 +1,7 @@
-const positiveMod = require('./utils.js');
+// BEWARE, IN THAT FILE I IS COLUMN INDEX AND J ROW INDEX (TRICKY, ISN'T
+// IT?)
+
+const {positiveMod: positiveMod} = require('./utils.js');
 const Confetti = require('./confetti.js');
 
 global.conf = Confetti;
@@ -9,6 +12,8 @@ global.conf = Confetti;
 class HtmlUI {
   constructor(puzzle, board, goal) {
     this.puzzle = puzzle;
+    this.rows = this.puzzle.rows;
+    this.cols = this.puzzle.cols;
     this.board = board;
     this.goal = goal;
     this.dragging = null;
@@ -18,11 +23,15 @@ class HtmlUI {
 
     // Setup colormap. Letters map to arbitrary colors, numbers map to a
     // gradient.
-    this.colorMap = {"A": "#b7e5dd", "B": "#9a86a4"};
-    for (let i=0; i<4; i++) {
-      for (let j=0; j<4; j++) {
-        const n = 1 + i * 4 + j;
-        const d = Math.sqrt((4-i)*(4-i) + (4-j)*(4-j)) / Math.sqrt(32);
+    this.colorMap = {};
+    this.colorMap["A"] = "#b7e5dd";
+    this.colorMap["B"] = "#9a86a4";
+    this.colorMap["C"] = "#b1bce6";
+    const md = Math.hypot(this.rows, this.cols);
+    for (let i=0; i<this.cols; i++) {
+      for (let j=0; j<this.rows; j++) {
+        const n = j * this.cols + i + 1;
+        const d = Math.hypot(this.cols - i, this.rows - j) / md;
         const red = 0x00 + (0xe0 - 0x00) * d;
         const green = 0x40 + (0xe0 - 0x40) * d;
         const blue = 0x70 + (0xe0 - 0x70) * d;
@@ -33,6 +42,7 @@ class HtmlUI {
 
     this.createGrid();
     this.createGoal();
+    this.initKeys();
 
     document.onpointermove = (ev) => this.handleMove(ev);
     document.onpointerup = (ev) => this.handleEnd(ev);
@@ -44,10 +54,10 @@ class HtmlUI {
     this.divs = {}; // tracks offsets => divs
 
     const r = [];
-    // We add cells in the [-4, 8) range to make wrapping easier.
-    for (let i=-4; i<8; i++) {
-      for (let j=-4; j<8; j++) {
-        r.push(this.createCell(i, j, this.puzzle.state[positiveMod(j, 4)][positiveMod(i, 4)]));
+    // We add cells in the [-n, 2*n) range to make wrapping easier.
+    for (let i=-this.cols; i<2*this.cols; i++) {
+      for (let j=-this.rows; j<2*this.rows; j++) {
+        r.push(this.createCell(i, j, this.puzzle.state[positiveMod(j, this.rows)][positiveMod(i, this.cols)]));
       }
     }
     this.board.replaceChildren(...r);
@@ -62,8 +72,10 @@ class HtmlUI {
   createCell(x, y, label) {
     const div = document.createElement("div");
     div.innerText = label;
-    div.style.left = this.offsetToPercentage(x);
-    div.style.top = this.offsetToPercentage(y);
+    div.style.left = this.offsetToPercentage(x,this.cols);
+    div.style.top = this.offsetToPercentage(y,this.rows);
+    div.style.width = (100 / this.cols) + "%";
+    div.style.height = (100 / this.rows) + "%";
     div.style.backgroundColor = this.colorMap[label];
     div.id = "cell_" + this.offsetToStr(x, y);
 
@@ -76,8 +88,8 @@ class HtmlUI {
     return div;
   }
 
-  offsetToPercentage(n) {
-    return (n * 100 / 4) + "%";
+  offsetToPercentage(n, m) {
+    return (n * 100 / m) + "%";
   }
 
   offsetToStr(x, y) {
@@ -85,8 +97,8 @@ class HtmlUI {
   }
 
   createGoal() {
-    for (let i=0; i<4; i++) {
-      for (let j=0; j<4; j++) {
+    for (let i=0; i<this.cols; i++) {
+      for (let j=0; j<this.rows; j++) {
         this.createGoalCell(i, j, this.puzzle.target[j][i])
       }
     }
@@ -95,8 +107,10 @@ class HtmlUI {
   createGoalCell(x, y, label) {
     const div = document.createElement("div");
     div.innerText = label;
-    div.style.left = this.offsetToPercentage(x);
-    div.style.top = this.offsetToPercentage(y);
+    div.style.left = this.offsetToPercentage(x, this.cols);
+    div.style.top = this.offsetToPercentage(y, this.rows);
+    div.style.width = (100 / this.cols) + "%";
+    div.style.height = (100 / this.rows) + "%";
     div.style.backgroundColor = this.colorMap[label];
     this.goal.appendChild(div);
   }
@@ -140,14 +154,14 @@ class HtmlUI {
     let deltaY = y - this.dragStart[1];
 
     // Prevent dragging too far in any direction
-    const maxX = this.offsetToX(3.5);
+    const maxX = this.offsetToX(this.cols - 0.5);
     if (deltaX > maxX) {
       deltaX = maxX;
     }
     if (deltaX < -maxX) {
       deltaX = -maxX;
     }
-    const maxY = this.offsetToY(3.5);
+    const maxY = this.offsetToY(this.rows - 0.5);
     if (deltaY > maxY) {
       deltaY = maxY;
     }
@@ -162,7 +176,7 @@ class HtmlUI {
     // figure out which axis we are dragging on
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
       // Grab all the nodes which need to move
-      const rows = this.puzzle.rowColPair(this.offsets[this.dragging.id][1]);
+      const rows = this.puzzle.rowGroup(this.offsets[this.dragging.id][1]);
       const nodes = rows.flatMap(row => this.findHorzNodes(row));
       nodes.forEach(el => {
         // TODO: would be cleaner to use percentages. It doesn't matter much as
@@ -171,7 +185,7 @@ class HtmlUI {
       });
     } else {
       // Grab all the nodes on the same column
-      const cols = this.puzzle.rowColPair(this.offsets[this.dragging.id][0]);
+      const cols = this.puzzle.colGroup(this.offsets[this.dragging.id][0]);
       const nodes = cols.flatMap(col => this.findVertNodes(col));
       nodes.forEach(el => {
         // TODO: would be cleaner to use percentages. It doesn't matter much as
@@ -201,14 +215,14 @@ class HtmlUI {
     let deltaY = y - this.dragStart[1];
 
     // Prevent dragging too far in any direction
-    const maxX = this.offsetToX(3.5);
+    const maxX = this.offsetToX(this.cols - 0.5);
     if (deltaX > maxX) {
       deltaX = maxX;
     }
     if (deltaX < -maxX) {
       deltaX = -maxX;
     }
-    const maxY = this.offsetToY(3.5);
+    const maxY = this.offsetToY(this.rows - 0.5);
     if (deltaY > maxY) {
       deltaY = maxY;
     }
@@ -224,12 +238,12 @@ class HtmlUI {
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
       // round deltaX
       const r = this.board.getBoundingClientRect();
-      deltaX = Math.round(deltaX * 4 / r.width);
+      deltaX = Math.round(deltaX * this.cols / r.width);
       this.puzzle.moveHorz(this.offsets[this.dragging.id][1], deltaX);
     } else {
       // round deltaY
       const r = this.board.getBoundingClientRect();
-      deltaY = Math.round(deltaY * 4 / r.height);
+      deltaY = Math.round(deltaY * this.rows / r.height);
       this.puzzle.moveVert(this.offsets[this.dragging.id][0], deltaY);
     }
 
@@ -239,46 +253,55 @@ class HtmlUI {
     return false;
   }
 
+  initKeys() {
+    // [hv, idx, n] means
+    //   hv: 0 for horizontal, 1 for vertical
+    //   idx: the index of row or column
+    //   n: the move count
+    this.keys = {};
+    for (let i = 0; i < this.cols; i++) {
+      this.keys[49 + i] = [1, i, 1];
+    }
+    // TGBYHN
+    const hkeys = [84, 71, 66, 89, 72, 78];
+    for (let i = 0; i < this.rows; i++) {
+      this.keys[hkeys[i]] = [0, i, 1];
+    }
+  }
+
   handleKey(ev) {
-    switch (ev.keyCode) {
-      case 49: // "1"
-      case 50: // "2"
-      case 51: // "3"
-      case 52: // "4"
-        this.puzzle.moveVert(ev.keyCode - 49, ev.shiftKey ? -1 : 1);
-        break;
-      case 53: // "5"
-        this.puzzle.moveHorz(0, ev.shiftKey ? -1 : 1);
-        break;
-      case 84: // "T"
-      this.puzzle.moveHorz(1, ev.shiftKey ? -1 : 1);
-      break;
-      case 71: // "G"
-      this.puzzle.moveHorz(2, ev.shiftKey ? -1 : 1);
-      break;
-      case 66: // "B"
-      this.puzzle.moveHorz(3, ev.shiftKey ? -1 : 1);
-      break;
-      default:
-        return;
+    const funs = [
+      (a, b) => { this.puzzle.moveHorz(a, b); },
+      (a, b) => { this.puzzle.moveVert(a, b); }
+    ];
+    if (ev.keyCode in this.keys) {
+      let move = this.keys[ev.keyCode];
+      let k = 1;
+      if (ev.shiftKey) {
+        k = -1;
+      }
+      funs[move[0]](move[1], k * move[2]);
+    } else {
+      // alert(ev.keyCode);
+      return;
     }
     this.createGrid();
     ev.preventDefault();
   }
 
   resetNodes() {
-    const rows = this.puzzle.rowColPair(this.offsets[this.dragging.id][1]);
+    const rows = this.puzzle.rowGroup(this.offsets[this.dragging.id][1]);
     let nodes = rows.flatMap(row => this.findHorzNodes(row));
     nodes.forEach(el => el.style.left = this.offsetToX(this.offsets[el.id][0]));
 
-    const cols = this.puzzle.rowColPair(this.offsets[this.dragging.id][0]);
+    const cols = this.puzzle.colGroup(this.offsets[this.dragging.id][0]);
     nodes = cols.flatMap(col => this.findVertNodes(col));
     nodes.forEach(el => el.style.top = this.offsetToY(this.offsets[el.id][1]));
   }
 
   findHorzNodes(offset) {
     const r = [];
-    for (let i=-4; i<8; i++) {
+    for (let i=-this.cols; i<2*this.cols; i++) {
       r.push(this.divs[this.offsetToStr(i, offset)])
     }
     return r;
@@ -286,7 +309,7 @@ class HtmlUI {
 
   findVertNodes(offset) {
     const r = [];
-    for (let j=-4; j<8; j++) {
+    for (let j=-this.rows; j<2*this.rows; j++) {
       r.push(this.divs[this.offsetToStr(offset, j)])
     }
     return r;
@@ -295,13 +318,13 @@ class HtmlUI {
   offsetToX(n) {
     const border = (this.board.offsetWidth - this.board.clientWidth);
     const r = this.board.getBoundingClientRect();
-    return n * (r.width-border)/4
+    return n * (r.width-border)/this.cols;
   }
 
   offsetToY(n) {
     const border = (this.board.offsetHeight - this.board.clientHeight);
     const r = this.board.getBoundingClientRect();
-    return n * (r.height-border)/4
+    return n * (r.height-border)/this.rows;
   }
 }
 
