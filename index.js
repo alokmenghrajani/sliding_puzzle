@@ -52,9 +52,9 @@ const digits = "ABCDEFGHIJK";
 //   height: the number of grouped rows when moving
 //   width: the number of grouped columns when moving
 function mkPuzzle(rows, cols, pattern, height, width) {
-  puzzle = new Array(rows);
+  const arr = new Array(rows);
   for (let i = 0; i < rows; i++) {
-    puzzle[i] = new Array(cols);
+    arr[i] = new Array(cols);
     for (let j = 0; j < cols; j++) {
       let cell;
       if (pattern == 0) {
@@ -62,11 +62,11 @@ function mkPuzzle(rows, cols, pattern, height, width) {
       } else {
         cell = digits[(i + j) % pattern];
       }
-      puzzle[i][j] = cell;
+      arr[i][j] = cell;
     }
   }
   const difficulty = new Difficulty(height, width);
-  puzzle = new Puzzle(puzzle, difficulty);
+  const puzzle = new Puzzle(arr, difficulty);
   puzzle.shuffle(100);
   return puzzle;
 }
@@ -89,15 +89,15 @@ function loadLevel(level) {
       break;
     case "6x6 easy":
       puzzle = mkPuzzle(6, 6, 0, 2, 2);
-      text = "6x6 Easy";
+      text = "6x6 easy";
       break;
     case "6x6 medium":
       puzzle = mkPuzzle(6, 6, 3, 3, 3);
-      text = "6x6 Medium";
+      text = "6x6 medium";
       break;
     case "6x6 hard":
       puzzle = mkPuzzle(6, 6, 0, 3, 3);
-      text = "6x6 Hard";
+      text = "6x6 hard";
       break;
   }
   new HtmlUI(puzzle, board, goal);

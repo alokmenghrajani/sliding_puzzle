@@ -1,6 +1,3 @@
-// BEWARE, IN THAT FILE I IS COLUMN INDEX AND J ROW INDEX (TRICKY, ISN'T
-// IT?)
-
 const {positiveMod: positiveMod} = require('./utils.js');
 const Confetti = require('./confetti.js');
 
@@ -28,6 +25,8 @@ class HtmlUI {
     this.colorMap["B"] = "#9a86a4";
     this.colorMap["C"] = "#b1bce6";
     const md = Math.hypot(this.rows, this.cols);
+
+    // In general, i maps to colum indexes and j maps to row indexes.
     for (let i=0; i<this.cols; i++) {
       for (let j=0; j<this.rows; j++) {
         const n = j * this.cols + i + 1;
@@ -282,7 +281,6 @@ class HtmlUI {
       }
       funs[move[0]](move[1], k * move[2]);
     } else {
-      // alert(ev.keyCode);
       return;
     }
     this.createGrid();
