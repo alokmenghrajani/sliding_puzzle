@@ -41,28 +41,67 @@ window.onload = () => positionBoards();
 window.onresize = () => positionBoards();
 positionBoards();
 
+// characters used for patterns
+const digits = "ABCDEFGHIJK";
+
+// mkPuzzle
+//   rows: the number of rows
+//   cols: the number of cols
+//   pattern: 0 if no pattern, otherwise the size of the pattern. 2
+//     means two colors (A and B). 3, three (A, B and C) etc.
+//   height: the number of grouped rows when moving
+//   width: the number of grouped columns when moving
+function mkPuzzle(rows, cols, pattern, height, width) {
+  const arr = new Array(rows);
+  for (let i = 0; i < rows; i++) {
+    arr[i] = new Array(cols);
+    for (let j = 0; j < cols; j++) {
+      let cell;
+      if (pattern == 0) {
+        cell = cols * i + j + 1;
+      } else {
+        cell = digits[(i + j) % pattern];
+      }
+      arr[i][j] = cell;
+    }
+  }
+  const difficulty = new Difficulty(height, width);
+  const puzzle = new Puzzle(arr, difficulty);
+  puzzle.shuffle(100);
+  return puzzle;
+}
+
 function loadLevel(level) {
   let puzzle;
+  let text;
   switch (level) {
     case "easy":
-      puzzle = new Puzzle([["A", "B", "A", "B"], ["B", "A", "B", "A"], ["A", "B", "A", "B"], ["B", "A", "B", "A"]], Difficulty.Easy);
-      puzzle.shuffle(100);
-      new HtmlUI(puzzle, board, goal);
-      global.footer.innerText = "Current level: Easy"
+      puzzle = mkPuzzle(4, 4, 2, 1, 1);
+      text = "Easy";
       break;
     case "medium":
-      puzzle = new Puzzle([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]], Difficulty.Easy);
-      puzzle.shuffle(100);
-      new HtmlUI(puzzle, board, goal);
-      global.footer.innerText = "Current level: Medium"
+      puzzle = mkPuzzle(4, 4, 0, 1, 1);
+      text = "Medium";
       break;
     case "hard":
-      puzzle = new Puzzle([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]], Difficulty.Hard);
-      puzzle.shuffle(100);
-      new HtmlUI(puzzle, board, goal);
-      global.footer.innerText = "Current level: Hard"
+      puzzle = mkPuzzle(4, 4, 0, 2, 2);
+      text = "Hard";
+      break;
+    case "6x6 easy":
+      puzzle = mkPuzzle(6, 6, 0, 2, 2);
+      text = "6x6 easy";
+      break;
+    case "6x6 medium":
+      puzzle = mkPuzzle(6, 6, 3, 3, 3);
+      text = "6x6 medium";
+      break;
+    case "6x6 hard":
+      puzzle = mkPuzzle(6, 6, 0, 3, 3);
+      text = "6x6 hard";
       break;
   }
+  new HtmlUI(puzzle, board, goal);
+  global.footer.innerText = "Current level: " + text;
 }
 
 // default easy
@@ -86,6 +125,9 @@ global.showLevels.onclick = () => {
 global.easy.onclick = () => loadLevel("easy");
 global.medium.onclick = () => loadLevel("medium");
 global.hard.onclick = () => loadLevel("hard");
+global.gen_6x6_easy.onclick = () => loadLevel("6x6 easy");
+global.gen_6x6_medium.onclick = () => loadLevel("6x6 medium");
+global.gen_6x6_hard.onclick = () => loadLevel("6x6 hard");
 
 global.levels.onclick = () => {
   document.body.classList.remove("hide");
